@@ -371,9 +371,55 @@ docker exec dns-proxy ps aux
 
 ### Customizing the Agent Environment
 
-1. Edit `Dockerfile.agent` to add new tools or packages
-2. Rebuild: `docker build -t coder-sandbox -f Dockerfile.agent .`
-3. Test: `./run-agent.sh which your-new-tool`
+The base `Dockerfile.agent` includes only basic tools (Node.js, npm, pip, curl). For additional dependencies:
+
+#### Create Custom Dockerfiles
+
+For specific tool requirements, create custom Dockerfiles:
+
+```dockerfile
+# Example: Dockerfile.dotnet
+FROM ubuntu:24.04
+
+RUN apt-get update && \
+    apt-get install -y nodejs npm python3-pip curl wget gnupg software-properties-common && \
+    # Install .NET SDK
+    wget https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
+    dpkg -i packages-microsoft-prod.deb && \
+    rm packages-microsoft-prod.deb && \
+    apt-get update && \
+    apt-get install -y dotnet-sdk-8.0 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+ARG USER_ID=1001
+RUN useradd -m -u ${USER_ID} agent
+
+COPY init-restricted.sh /usr/local/bin/init-restricted.sh
+RUN chmod +x /usr/local/bin/init-restricted.sh
+
+WORKDIR /home/agent/app
+ENTRYPOINT ["/usr/local/bin/init-restricted.sh"]
+```
+
+Build and use:
+```bash
+docker build -t dotnet-sandbox -f Dockerfile.dotnet . --build-arg USER_ID=$(id -u)
+SANDBOX_IMAGE=dotnet-sandbox ./run-agent.sh dotnet --version
+```
+
+#### Package Installation
+
+All packages install inside the container (ephemeral) - they don't persist on the host:
+
+```bash
+# These are lost when container stops (secure)
+./run-agent.sh npm install express
+./run-agent.sh pip install requests
+
+# Only files in src/ persist
+./run-agent.sh echo "console.log('hello')" > app.js  # Saved to host
+```
 
 ### Extending Security Tests
 
