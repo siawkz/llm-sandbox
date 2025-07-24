@@ -1,0 +1,10 @@
+FROM python:3.11-slim
+
+RUN pip install dnslib
+
+COPY dns_proxy.py /app/dns_proxy.py
+COPY whitelist.txt /data/whitelist.txt
+
+RUN chmod +x /app/dns_proxy.py
+
+CMD ["python3", "/app/dns_proxy.py"]

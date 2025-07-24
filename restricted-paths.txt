@@ -1,0 +1,15 @@
+# Restricted paths configuration
+# One path per line - supports both files and directories
+# Lines starting with # are comments and will be ignored
+# Empty lines are also ignored
+
+# Example restricted directories
+secrets
+private
+
+# Example restricted files
+# config.json
+# api-keys.txt
+# .env
+
+# Add your custom restrictions here

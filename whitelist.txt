@@ -1,0 +1,10 @@
+generativelanguage.googleapis.com
+iam.googleapis.com
+oauth2.googleapis.com
+registry.npmjs.org
+pypi.org
+
+# Anthropic Claude API domains
+api.anthropic.com
+claude.ai
+statsig.anthropic.com

@@ -1,0 +1,19 @@
+FROM ubuntu:24.04
+
+RUN apt-get update && \
+    apt-get install -y nodejs npm python3-pip curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+ARG USER_ID=1001
+RUN useradd -m -u ${USER_ID} agent
+
+# Copy init script for optional restrictions
+COPY init-restricted.sh /usr/local/bin/init-restricted.sh
+RUN chmod +x /usr/local/bin/init-restricted.sh
+
+# Set working directory (but stay as root for init script)
+WORKDIR /home/agent/app
+
+# Use init script as entrypoint (runs as root, then switches user)
+ENTRYPOINT ["/usr/local/bin/init-restricted.sh"]
