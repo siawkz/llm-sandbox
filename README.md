@@ -17,7 +17,7 @@ git clone <repo-url> llm-sandbox
 cd llm-sandbox
 
 # Build Docker images
-docker build -t coder-sandbox -f Dockerfile.agent .
+docker build -t coder-sandbox -f Dockerfile.agent . --build-arg USER_ID=$(id -u)
 docker build -t dns-proxy -f Dockerfile.dns .
 
 # Make scripts executable
@@ -71,6 +71,8 @@ pypi.org
 api.anthropic.com
 claude.ai
 statsig.anthropic.com
+ingest.us.sentry.io
+console.anthropic.com
 
 # Add your domains here
 api.example.com
@@ -124,20 +126,6 @@ RESTRICTED_NETWORK=my-net /path/to/llm-sandbox/run-agent.sh command
 
 ## Development Workflows
 
-### Package Management
-
-```bash
-cd /path/to/your/project
-
-# Node.js projects
-/path/to/llm-sandbox/run-agent.sh npm init -y
-/path/to/llm-sandbox/run-agent.sh npm install express
-
-# Python projects
-/path/to/llm-sandbox/run-agent.sh pip install requests
-/path/to/llm-sandbox/run-agent.sh python -m venv venv
-```
-
 ### Claude Code Integration
 
 Claude Code is pre-installed globally in the sandbox:
@@ -145,29 +133,15 @@ Claude Code is pre-installed globally in the sandbox:
 ```bash
 cd /path/to/your/project
 
-# Check Claude Code version (no API key needed)
+# Start Claude Code interactive session
+/path/to/llm-sandbox/run-agent.sh claude
+
+# Check version
 /path/to/llm-sandbox/run-agent.sh claude --version
-
-# Set API key and use Claude Code
-export ANTHROPIC_API_KEY="your_api_key_here"
-/path/to/llm-sandbox/run-agent.sh claude --print "Analyze this code" < script.js
-
-# Or set API key inline
-ANTHROPIC_API_KEY="your_key" /path/to/llm-sandbox/run-agent.sh claude --print "Your prompt"
-
-# Interactive mode (requires API key)
-ANTHROPIC_API_KEY="your_key" /path/to/llm-sandbox/run-agent.sh claude
-
-# For automation (skip permission prompts)
-ANTHROPIC_API_KEY="your_key" /path/to/llm-sandbox/run-agent.sh claude --dangerously-skip-permissions --print "Your prompt"
 ```
 
-**Features:**
-- ✅ **Pre-installed**: Claude Code comes ready to use
-- ✅ **API Key Support**: Set `ANTHROPIC_API_KEY` environment variable
-- ✅ **Network Isolated**: Only whitelisted Anthropic domains accessible
-- ✅ **Interactive & Non-interactive**: Supports both modes
-- ✅ **Automation Ready**: Use `--dangerously-skip-permissions` for scripts
+Claude Code will be using your host credentials, so ensure you have them set up
+in your environment.
 
 ### Custom Tool Installation
 

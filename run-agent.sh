@@ -14,23 +14,24 @@ fi
 
 # Create network if it doesn't exist
 if ! docker network ls | grep -q "$RESTRICTED_NETWORK"; then
-	docker network create --subnet=172.18.0.0/16 "$RESTRICTED_NETWORK"
+	docker network create "$RESTRICTED_NETWORK"
 fi
 
 # Start DNS proxy if not running
 if ! docker ps | grep -q dns-proxy; then
 	docker run -d --name dns-proxy \
 		--network "$RESTRICTED_NETWORK" \
-		--ip 172.18.0.2 \
 		dns-proxy
 fi
 
-# Create CODE_DIR if it doesn't exist
-mkdir -p "$CODE_DIR"
+# Get DNS proxy IP dynamically
+DNS_PROXY_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' dns-proxy)
 
-# Build image with correct user ID if needed
-if ! docker images "$SANDBOX_IMAGE" | grep -q "$SANDBOX_IMAGE"; then
-	docker build --build-arg USER_ID="$(id -u)" -t "$SANDBOX_IMAGE" -f Dockerfile.agent .
+# Verify CODE_DIR exists
+if [ ! -d "$CODE_DIR" ]; then
+	echo "Error: Directory '$CODE_DIR' does not exist"
+	echo "Please ensure you're running from your project directory or set CODE_DIR correctly"
+	exit 1
 fi
 
 # Run the agent container (starts as root, switches to agent user after restrictions)
@@ -38,12 +39,11 @@ fi
 docker run --rm -it \
 	--privileged \
 	--network "$RESTRICTED_NETWORK" \
-	--dns 172.18.0.2 \
+	--dns "$DNS_PROXY_IP" \
 	-e TERM=xterm-256color \
 	-e RESTRICTED_PATHS="${RESTRICTED_PATHS:-}" \
-	-e ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}" \
 	-v "$CODE_DIR:/home/agent/app" \
-	-v "$HOME/.config/gcloud:/home/agent/.config/gcloud:ro" \
-	-v "$HOME/.config/claude:/home/agent/.config/claude" \
+	-v "$HOME/.claude:/home/agent/.claude:rw" \
+	-v "$HOME/.claude.json:/home/agent/.claude.json:rw" \
 	"$SANDBOX_IMAGE" \
 	"$@"
