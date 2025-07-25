@@ -35,12 +35,15 @@ fi
 
 # Run the agent container (starts as root, switches to agent user after restrictions)
 # Requires --privileged for bind mounts, but container is still isolated via network/filesystem
-docker run --rm -i \
+docker run --rm -it \
 	--privileged \
 	--network "$RESTRICTED_NETWORK" \
 	--dns 172.18.0.2 \
+	-e TERM=xterm-256color \
 	-e RESTRICTED_PATHS="${RESTRICTED_PATHS:-}" \
+	-e ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}" \
 	-v "$CODE_DIR:/home/agent/app" \
 	-v "$HOME/.config/gcloud:/home/agent/.config/gcloud:ro" \
+	-v "$HOME/.config/claude:/home/agent/.config/claude" \
 	"$SANDBOX_IMAGE" \
 	"$@"

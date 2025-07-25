@@ -138,18 +138,36 @@ cd /path/to/your/project
 /path/to/llm-sandbox/run-agent.sh python -m venv venv
 ```
 
-### Claude CLI Integration
+### Claude Code Integration
+
+Claude Code is pre-installed globally in the sandbox:
 
 ```bash
 cd /path/to/your/project
 
-# Install Claude CLI
-/path/to/llm-sandbox/run-agent.sh npm install @anthropic-ai/claude-code
+# Check Claude Code version (no API key needed)
+/path/to/llm-sandbox/run-agent.sh claude --version
 
-# Use Claude CLI (network isolated to Anthropic domains)
-/path/to/llm-sandbox/run-agent.sh ./node_modules/.bin/claude --help
-/path/to/llm-sandbox/run-agent.sh ./node_modules/.bin/claude
+# Set API key and use Claude Code
+export ANTHROPIC_API_KEY="your_api_key_here"
+/path/to/llm-sandbox/run-agent.sh claude --print "Analyze this code" < script.js
+
+# Or set API key inline
+ANTHROPIC_API_KEY="your_key" /path/to/llm-sandbox/run-agent.sh claude --print "Your prompt"
+
+# Interactive mode (requires API key)
+ANTHROPIC_API_KEY="your_key" /path/to/llm-sandbox/run-agent.sh claude
+
+# For automation (skip permission prompts)
+ANTHROPIC_API_KEY="your_key" /path/to/llm-sandbox/run-agent.sh claude --dangerously-skip-permissions --print "Your prompt"
 ```
+
+**Features:**
+- ✅ **Pre-installed**: Claude Code comes ready to use
+- ✅ **API Key Support**: Set `ANTHROPIC_API_KEY` environment variable
+- ✅ **Network Isolated**: Only whitelisted Anthropic domains accessible
+- ✅ **Interactive & Non-interactive**: Supports both modes
+- ✅ **Automation Ready**: Use `--dangerously-skip-permissions` for scripts
 
 ### Custom Tool Installation
 

@@ -12,6 +12,7 @@ The system consists of three main components that work together:
 
 ### 1. Agent Container (`Dockerfile.agent`)
 - Ubuntu 24.04 base with Node.js, npm, Python, and curl
+- Claude Code pre-installed globally for LLM agent workflows
 - Uses dynamic user ID mapping (`USER_ID` build arg) to match host permissions
 - Runs `init-restricted.sh` as entrypoint (starts as root, switches to agent user after applying restrictions)
 - Working directory: `/home/agent/app` (mounted from host's current directory by default)
