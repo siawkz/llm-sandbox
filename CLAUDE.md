@@ -14,7 +14,7 @@ The system consists of three main components that work together:
 - Ubuntu 24.04 base with Node.js, npm, Python, and curl
 - Uses dynamic user ID mapping (`USER_ID` build arg) to match host permissions
 - Runs `init-restricted.sh` as entrypoint (starts as root, switches to agent user after applying restrictions)
-- Working directory: `/home/agent/app` (mounted from host's `src/` directory)
+- Working directory: `/home/agent/app` (mounted from host's current directory by default)
 
 ### 2. DNS Proxy Container (`Dockerfile.dns`)
 - Python-based DNS server using `dnslib` that filters network access
@@ -42,14 +42,18 @@ chmod +x run-agent.sh test_sandbox.sh
 
 ### Running Commands in Sandbox
 ```bash
-# Basic usage - run any command in isolated environment
-./run-agent.sh <command>
+# Basic usage - run from your project directory
+cd /path/to/your/project
+/path/to/llm-sandbox/run-agent.sh <command>
 
-# Examples
-./run-agent.sh ls -la                    # List files in working directory
-./run-agent.sh npm install express       # Install packages (from whitelisted registries)
-./run-agent.sh python script.py          # Run Python scripts
-./run-agent.sh bash                      # Interactive shell
+# Or specify a different directory
+CODE_DIR=/path/to/project /path/to/llm-sandbox/run-agent.sh <command>
+
+# Examples (run from your project directory)
+/path/to/llm-sandbox/run-agent.sh ls -la                    # List files in current directory
+/path/to/llm-sandbox/run-agent.sh npm install express       # Install packages (from whitelisted registries)
+/path/to/llm-sandbox/run-agent.sh python script.py          # Run Python scripts
+/path/to/llm-sandbox/run-agent.sh bash                      # Interactive shell
 ```
 
 ### Testing
@@ -79,11 +83,13 @@ docker build -t dns-proxy -f Dockerfile.dns .
 #### Path Restrictions (no rebuild needed)
 ```bash
 # File-based restrictions (recommended)
-cp restricted-paths.txt src/
-./run-agent.sh command
+cp restricted-paths.txt /path/to/your/project/
+cd /path/to/your/project
+/path/to/llm-sandbox/run-agent.sh command
 
 # Environment variable restrictions (dynamic)
-RESTRICTED_PATHS="secrets,config.json,private" ./run-agent.sh command
+cd /path/to/your/project
+RESTRICTED_PATHS="secrets,config.json,private" /path/to/llm-sandbox/run-agent.sh command
 ```
 
 ### Monitoring and Debugging
@@ -103,13 +109,13 @@ docker network rm agent-net
 
 The sandbox implements defense-in-depth with three isolation layers:
 
-1. **Container Isolation**: Agent runs in separate container, cannot access host filesystem except mounted `src/` directory
+1. **Container Isolation**: Agent runs in separate container, cannot access host filesystem except mounted working directory
 2. **Network Isolation**: Custom Docker network with DNS proxy filtering - only whitelisted domains resolve
 3. **Path Restrictions**: Within working directory, specific files/folders can be made inaccessible via permission removal
 
 ## Environment Variables
 
-- `CODE_DIR` (default: `src`) - Host directory to mount as working directory
+- `CODE_DIR` (default: current directory) - Host directory to mount as working directory
 - `SANDBOX_IMAGE` (default: `coder-sandbox`) - Agent container image name  
 - `RESTRICTED_NETWORK` (default: `agent-net`) - Docker network name
 - `RESTRICTED_PATHS` - Comma-separated list of paths to restrict (overridden by `restricted-paths.txt` if present)
