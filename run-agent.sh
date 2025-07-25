@@ -34,9 +34,21 @@ if [ ! -d "$CODE_DIR" ]; then
 	exit 1
 fi
 
+# Validate configuration files if validation script exists
+if [ -x "./validate_config.sh" ]; then
+	./validate_config.sh 2>/dev/null || echo "⚠️  Configuration validation failed. Run ./validate_config.sh for details."
+fi
+
+# Detect if we need interactive mode (TTY allocation)
+DOCKER_FLAGS="--rm"
+if [ -t 0 ] && [ -t 1 ]; then
+	# Both stdin and stdout are terminals, enable interactive mode
+	DOCKER_FLAGS="$DOCKER_FLAGS -it"
+fi
+
 # Run the agent container (starts as root, switches to agent user after restrictions)
 # Requires --privileged for bind mounts, but container is still isolated via network/filesystem
-docker run --rm -it \
+docker run $DOCKER_FLAGS \
 	--privileged \
 	--network "$RESTRICTED_NETWORK" \
 	--dns "$DNS_PROXY_IP" \
