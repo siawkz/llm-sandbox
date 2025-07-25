@@ -1,10 +1,24 @@
-FROM python:3.11-slim
+# Multi-stage build for smaller image size
+FROM python:3.11-slim AS builder
 
-RUN pip install dnslib
+# Install dependencies in builder stage
+RUN pip install --no-cache-dir dnslib
 
+# Final stage with minimal layers
+FROM python:3.11-slim AS runtime
+
+# Copy only the installed packages from builder
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+
+# Copy application files
 COPY dns_proxy.py /app/dns_proxy.py
 COPY whitelist.txt /data/whitelist.txt
 
-RUN chmod +x /app/dns_proxy.py
+# Set executable permissions and create non-root user for security
+RUN chmod +x /app/dns_proxy.py && \
+    useradd -r -s /bin/false dnsuser
+
+# Switch to non-root user
+USER dnsuser
 
 CMD ["python3", "/app/dns_proxy.py"]
